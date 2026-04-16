@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#1e7b4a">
+    <title>{% block title %}Analisis Sentimen TikTok{% endblock %}</title>
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Leaflet CSS (opsional, hanya jika dibutuhkan) -->
+    {% block leaflet_css %}{% endblock %}
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e7b4a;
+            --primary-dark: #156b40;
+            --primary-light: #e8f5e9;
+            --primary-glow: rgba(30, 123, 74, 0.15);
+            
+            --success: #2e7d32;
+            --danger: #c62828;
+            --warning: #ed6c02;
+            --info: #0288d1;
+            --neutral: #6c757d;
+            
+            --bg-body: #f5f7fb;
+            --bg-surface: #ffffff;
+            --bg-elevated: #ffffff;
+            --bg-muted: #f8f9fa;
+            
+            --text-primary: #1a2c3e;
+            --text-secondary: #5a6e7c;
+            --text-muted: #8a9aa8;
+            --text-disabled: #b9c3ce;
+            
+            --border-light: #e9ecef;
+            --border: #dee2e6;
+            --border-dark: #ced4da;
+            
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+            --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.1);
+            
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+            --radius-full: 9999px;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.3; }
+        h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; }
+        h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; }
+        
+        @media (min-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.75rem; }
+        }
+
+        .app-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        @media (min-width: 768px) {
+            .main-content { padding: 32px 40px; }
+        }
+        @media (min-width: 1200px) {
+            .main-content { padding: 40px 48px; }
+        }
+
+        /* Header */
+        .site-header {
+            background: var(--bg-surface);
+            border-bottom: 3px solid var(--primary);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .header-container { padding: 16px 40px; }
+        }
+        @media (min-width: 1200px) {
+            .header-container { padding: 20px 48px; }
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .logo-area:hover { opacity: 0.85; }
+
+        .logo-icon {
+            font-size: 32px;
+            color: var(--primary);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+        .logo-title span { color: var(--primary); }
+
+        .logo-tagline {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        @media (min-width: 480px) {
+            .logo-title { font-size: 1.6rem; }
+            .logo-tagline { font-size: 0.75rem; }
+        }
+
+        /* Navigation */
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-full);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item i {
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .nav-item:hover i { transform: translateY(-1px); }
+
+        .nav-item.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .nav-item.active i { color: white; }
+
+        .nav-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 8px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .nav-item.active .nav-badge {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+        }
+        .mobile-menu-btn:hover { background: var(--bg-muted); }
+
+        .mobile-nav {
+            display: none;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-light);
+            padding: 12px 20px;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mobile-nav.show { display: flex; }
+
+        .mobile-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--bg-muted);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .mobile-nav-item i {
+            width: 24px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        .mobile-nav-item:hover {
+            background: var(--primary-light);
+            transform: translateX(4px);
+        }
+        .mobile-nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        .mobile-nav-item.active i { color: white; }
+
+        .mobile-nav-badge {
+            margin-left: auto;
+            background: var(--primary);
+            color: white;
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Database Status Bar */
+        .db-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-muted);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .db-status-icon {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+        .db-status-text {
+            flex: 1;
+            font-size: 0.85rem;
+        }
+        .db-status-count {
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .db-status-empty {
+            background: var(--warning);
+            color: white;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .db-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .db-action-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .site-footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-light);
+            margin-top: 48px;
+            padding: 32px 20px 24px;
+        }
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+        .footer-section h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .footer-section p, .footer-section a {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+            transition: color 0.2s;
+        }
+        .footer-section a:hover { color: var(--primary); }
+        .footer-bottom {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-light);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .footer-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .footer-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .footer-stat i { color: var(--primary); }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loading-card {
+            background: var(--bg-surface);
+            padding: 32px 48px;
+            border-radius: var(--radius-xl);
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+        }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--primary-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-menu { display: none; }
+            .mobile-menu-btn { display: block; }
+            .logo-title { font-size: 1.3rem; }
+            .db-status-bar { flex-direction: column; text-align: center; }
+            .footer-grid { grid-template-columns: 1fr; text-align: center; gap: 24px; }
+            .footer-stats { flex-direction: column; gap: 8px; align-items: center; }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .nav-item { padding: 8px 14px; font-size: 0.85rem; }
+            .nav-item span:not(.nav-badge) { display: none; }
+            .nav-item i { margin: 0; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-muted); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+
+        @media print {
+            .site-header, .site-footer, .db-status-bar { display: none; }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="site-header">
+            <div class="header-container">
+                <a href="/" class="logo-area">
+                    <i class="fab fa-tiktok logo-icon"></i>
+                    <div class="logo-text">
+                        <div class="logo-title">Analisis <span>Sentimen</span></div>
+                        <div class="logo-tagline">TikTok • Powered by AI</div>
+                    </div>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <nav class="nav-menu">
+                    <a href="/" class="nav-item {% if active_page == 'home' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span>Beranda</span>
+                    </a>
+                    <a href="/sentiment-heatmap" class="nav-item {% if active_page == 'heatmap' %}active{% endif %}">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span>Heatmap Indonesia</span>
+                        {% if total_comments_in_db and total_comments_in_db > 0 %}
+                        <span class="nav-badge">{{ total_comments_in_db }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="/bengkulu-heatmap" class="nav-item {% if active_page == 'bengkulu' %}active{% endif %}">
+                        <i class="fas fa-map-pin"></i>
+                        <span>Bengkulu</span>
+                        {% if bengkulu_comments_count and bengkulu_comments_count > 0 %}
+                        <span class="nav-badge">{{ bengkulu_comments_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="/scrape-to-db" class="nav-item {% if active_page == 'scrape' %}active{% endif %}">
+                        <i class="fas fa-database"></i>
+                        <span>Simpan Data</span>
+                    </a>
+                    <a href="/about" class="nav-item {% if active_page == 'about' %}active{% endif %}">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Tentang</span>
+                    </a>
+                </nav>
+                
+                <!-- User Profile & Logout -->
+                <div class="user-menu" style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                    <div class="user-info" style="text-align: right; display: block;">
+                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); line-height: 1;">{{ session.get('full_name', 'User') }}</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">@{{ session.get('username', 'user') }}</div>
+                    </div>
+                    <div class="user-avatar" style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 8px var(--primary-glow); border: 2px solid white;">
+                        {{ session.get('username', 'U')[0].upper() }}
+                    </div>
+                    <div style="width: 1px; height: 24px; background: var(--border-light); margin: 0 4px;"></div>
+                    <a href="/logout" class="logout-btn" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-muted); color: var(--danger); text-decoration: none; transition: all 0.2s; border: 1px solid var(--border-light);" title="Keluar">
+                        <i class="fas fa-power-off" style="font-size: 0.9rem;"></i>
+                    </a>
+                </div>
+                
+                <style>
+                    .logout-btn:hover {
+                        background: #fff5f5;
+                        color: #ff3b30;
+                        transform: scale(1.05);
+                        border-color: #ffcccc;
+                    }
+                    @media (max-width: 600px) {
+                        .user-info { display: none !important; }
+                    }
+                </style>
+
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" style="margin-left: 10px;">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Navigation Menu -->
+            <div class="mobile-nav" id="mobileNav">
+                <div class="mobile-user-info" style="padding: 15px; border-radius: 12px; background: var(--primary-light); display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                    <div style="width: 45px; height: 45px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem;">
+                        {{ session.get('username', 'U')[0].upper() }}
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--text-primary);">{{ session.get('full_name', 'Nama User') }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">@{{ session.get('username', 'user') }}</div>
+                    </div>
+                </div>
+                <a href="/" class="mobile-nav-item {% if active_page == 'home' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span>Beranda</span>
+                </a>
+                <a href="/sentiment-heatmap" class="mobile-nav-item {% if active_page == 'heatmap' %}active{% endif %}">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Heatmap Indonesia</span>
+                    {% if total_comments_in_db and total_comments_in_db > 0 %}
+                    <span class="mobile-nav-badge">{{ total_comments_in_db }}</span>
+                    {% endif %}
+                </a>
+                <a href="/bengkulu-heatmap" class="mobile-nav-item {% if active_page == 'bengkulu' %}active{% endif %}">
+                    <i class="fas fa-map-pin"></i>
+                    <span>Bengkulu</span>
+                    {% if bengkulu_comments_count and bengkulu_comments_count > 0 %}
+                    <span class="mobile-nav-badge">{{ bengkulu_comments_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/scrape-to-db" class="mobile-nav-item {% if active_page == 'scrape' %}active{% endif %}">
+                    <i class="fas fa-database"></i>
+                    <span>Simpan Data</span>
+                </a>
+                <a href="/about" class="mobile-nav-item {% if active_page == 'about' %}active{% endif %}">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Tentang</span>
+                </a>
+                <a href="/logout" class="mobile-nav-item" style="margin-top: 10px; background: rgba(198, 40, 40, 0.05); color: var(--danger);">
+                    <i class="fas fa-sign-out-alt" style="color: var(--danger);"></i>
+                    <span>Keluar Sistem</span>
+                </a>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Database Status -->
+            {% if show_db_status|default(true) %}
+            <div class="db-status-bar">
+                <i class="fas fa-database db-status-icon"></i>
+                <div class="db-status-text">
+                    <strong>Status Database:</strong> 
+                    {% if total_comments_in_db and total_comments_in_db > 0 %}
+                    <span style="color: var(--primary);">✓ Terhubung</span> • {{ total_comments_in_db }} komentar tersimpan
+                    {% else %}
+                    <span style="color: var(--warning);">⚠️ Database kosong</span> • Mulai scrape data untuk menyimpan komentar
+                    {% endif %}
+                </div>
+                {% if total_comments_in_db and total_comments_in_db > 0 %}
+                <div class="db-status-count">
+                    <i class="fas fa-comment"></i> {{ total_comments_in_db }}
+                </div>
+                {% else %}
+                <div class="db-status-empty">
+                    <i class="fas fa-exclamation-triangle"></i> Kosong
+                </div>
+                {% endif %}
+                <a href="/scrape-to-db" class="db-action-btn">
+                    <i class="fas fa-cloud-download-alt"></i>
+                    <span>Isi Database</span>
+                </a>
+            </div>
+            {% endif %}
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert" style="
+                        background: {% if category == 'success' %}#e8f5e9{% elif category == 'error' %}#ffebee{% else %}#fff3e0{% endif %};
+                        border-left: 4px solid {% if category == 'success' %}var(--success){% elif category == 'error' %}var(--danger){% else %}var(--warning){% endif %};
+                        padding: 14px 20px;
+                        border-radius: var(--radius-md);
+                        margin-bottom: 20px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    ">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}" 
+                           style="color: {% if category == 'success' %}var(--success){% elif category == 'error' %}var(--danger){% else %}var(--warning){% endif %};"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-container">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h4>Tentang Aplikasi</h4>
+                        <p>Analisis sentimen komentar TikTok menggunakan AI model RoBERTa Indonesia. Dikembangkan untuk membantu memahami opini publik dengan mudah dan akurat.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Fitur Utama</h4>
+                        <p>✓ Analisis Sentimen Real-time</p>
+                        <p>✓ Visualisasi Data Interaktif</p>
+                        <p>✓ Heatmap Lokasi Indonesia</p>
+                        <p>✓ Penyimpanan ke Database</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Panduan</h4>
+                        <a href="/how-to-use">📖 Cara Penggunaan</a>
+                        <a href="/faq">❓ FAQ</a>
+                        <a href="/privacy">🔒 Privasi & Keamanan</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Kontak & Bantuan</h4>
+                        <p><i class="fas fa-envelope"></i> support@sentiment-tiktok.com</p>
+                        <p><i class="fab fa-github"></i> Github Repository</p>
+                        <p><i class="fab fa-tiktok"></i> @sentiment_analytics</p>
+                    </div>
+                </div>
+                
+                <div class="footer-stats">
+                    <div class="footer-stat">
+                        <i class="fas fa-microchip"></i>
+                        <span>AI Model: RoBERTa Indonesia</span>
+                    </div>
+                    <div class="footer-stat">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analisis Real-time</span>
+                    </div>
+                    <div class="footer-stat">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Data Terenkripsi</span>
+                    </div>
+                    <div class="footer-stat">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Responsive Design</span>
+                    </div>
+                </div>
+                
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Analisis Sentimen TikTok | Dibuat untuk Generasi Boomers & Semua Kalangan</p>
+                    <p style="margin-top: 8px; font-size: 0.7rem;">Versi 3.0 • Mudah, Cepat, dan Akurat</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-card">
+            <div class="loading-spinner"></div>
+            <h4>Memproses Data...</h4>
+            <p style="color: var(--text-secondary); margin-top: 8px;">Mohon tunggu sebentar</p>
+        </div>
+    </div>
+    
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileNav = document.getElementById('mobileNav');
+        
+        if (mobileMenuBtn && mobileNav) {
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileNav.classList.toggle('show');
+                const icon = mobileMenuBtn.querySelector('i');
+                if (mobileNav.classList.contains('show')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+            
+            document.addEventListener('click', function(event) {
+                if (!mobileMenuBtn.contains(event.target) && !mobileNav.contains(event.target)) {
+                    mobileNav.classList.remove('show');
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        }
+        
+        // Loading overlay
+        const forms = document.querySelectorAll('form[data-loading]');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                if (loadingOverlay) loadingOverlay.classList.add('show');
+            });
+        });
+        
+        // Auto-hide flash messages
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.3s';
+                setTimeout(() => {
+                    if (alert.parentNode) alert.remove();
+                }, 300);
+            }, 5000);
+        });
+        
+        window.showLoading = function() {
+            if (loadingOverlay) loadingOverlay.classList.add('show');
+        };
+        window.hideLoading = function() {
+            if (loadingOverlay) loadingOverlay.classList.remove('show');
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

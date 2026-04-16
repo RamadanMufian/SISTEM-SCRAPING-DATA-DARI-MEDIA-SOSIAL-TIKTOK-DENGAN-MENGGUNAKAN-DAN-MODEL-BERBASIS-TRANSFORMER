@@ -1,0 +1,84 @@
+<!-- templates/viral_dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Viral Analytics Dashboard</title>
+    <!-- Include Chart.js, etc -->
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔥 Viral Trend Analyzer</h1>
+            <div class="stats">
+                <div class="stat">
+                    <span class="label">Total Videos</span>
+                    <span class="value">{{ total_videos }}</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Viral Score</span>
+                    <span class="value">{{ avg_viral_score }}%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Viral Topics -->
+        <div class="card">
+            <h2>🚀 Trending Topics</h2>
+            <div class="topic-list">
+                {% for topic in viral_topics %}
+                <div class="topic-item">
+                    <span class="topic-name">{{ topic.topic }}</span>
+                    <div class="topic-bar">
+                        <div class="bar-fill" style="width: {{ topic.score }}%"></div>
+                    </div>
+                    <span class="topic-score">{{ topic.score }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Heatmap -->
+        <div class="card">
+            <h2>🗺️ Regional Heatmap</h2>
+            <div id="heatmap-container">
+                <!-- Map will be rendered here -->
+            </div>
+        </div>
+        
+        <!-- Predictions -->
+        <div class="card">
+            <h2>🔮 Viral Predictions</h2>
+            <div class="predictions-grid">
+                {% for pred in predictions %}
+                <div class="prediction-card">
+                    <h3>Video #{{ pred.video_id }}</h3>
+                    <div class="prediction-score">{{ pred.score }}%</div>
+                    <div class="prediction-details">
+                        <span>Confidence: {{ pred.confidence }}%</span>
+                        <span>Peak: {{ pred.peak_date }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div class="card">
+            <h2>⚠️ Active Alerts</h2>
+            <div class="alert-list">
+                {% for alert in alerts %}
+                <div class="alert-item alert-{{ alert.severity }}">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div class="alert-content">
+                        <h4>{{ alert.title }}</h4>
+                        <p>{{ alert.description }}</p>
+                    </div>
+                    <span class="alert-time">{{ alert.created_at }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

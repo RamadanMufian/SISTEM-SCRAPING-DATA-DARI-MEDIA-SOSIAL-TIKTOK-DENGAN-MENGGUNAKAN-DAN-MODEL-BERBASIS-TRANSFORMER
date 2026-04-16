@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card" style="margin-top: 40px; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <i class="fas fa-info-circle" style="font-size: 64px; color: var(--primary); margin-bottom: 20px;"></i>
+        <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--text-primary);">Tentang <span>Sistem</span></h1>
+        <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Pengepul dan Analisis Sentimen TikTok Berbasis AI untuk Wilayah Indonesia dan Bengkulu</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; margin-bottom: 40px;">
+        <div style="background: var(--bg-muted); padding: 32px; border-radius: 20px; border: 1px solid var(--border-light);">
+            <i class="fas fa-robot" style="font-size: 32px; color: var(--primary); margin-bottom: 16px;"></i>
+            <h3 style="margin-bottom: 12px;">AI Sentimen (RoBERTa)</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Sistem ini menggunakan model IndoRoBERTa yang telah di-fine-tune untuk memahami konteks bahasa Indonesia, termasuk slang dan dialek lokal, untuk klasifikasi sentimen Positif, Negatif, dan Netral.</p>
+        </div>
+        
+        <div style="background: var(--bg-muted); padding: 32px; border-radius: 20px; border: 1px solid var(--border-light);">
+            <i class="fas fa-map-marked-alt" style="font-size: 32px; color: var(--primary); margin-bottom: 16px;"></i>
+            <h3 style="margin-bottom: 12px;">Analisis Geospasial</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Dilengkapi dengan algoritma deteksi lokasi yang agresif untuk mengidentifikasi asal komentar di seluruh Indonesia, dengan fokus khusus mendalam pada wilayah Provinsi Bengkulu.</p>
+        </div>
+        
+        <div style="background: var(--bg-muted); padding: 32px; border-radius: 20px; border: 1px solid var(--border-light);">
+            <i class="fas fa-database" style="font-size: 32px; color: var(--primary); margin-bottom: 16px;"></i>
+            <h3 style="margin-bottom: 12px;">Penyimpanan Data</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Setiap data yang di-scrape akan disimpan secara permanen di dalam database untuk analisis historis, memungkinkan pengguna memantau tren sentimen dari waktu ke waktu.</p>
+        </div>
+    </div>
+
+    <div style="border-top: 1px solid var(--border-light); padding-top: 40px;">
+        <h2 style="margin-bottom: 24px;">Fitur Utama</h2>
+        <ul style="list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+            <li style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                Scraping Komentar Massal
+            </li>
+            <li style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                Visualisasi Heatmap Nasional
+            </li>
+            <li style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                Detail Heatmap Bengkulu
+            </li>
+            <li style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                Analisis Tren & Kata Kunci
+            </li>
+            <li style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                Prediksi Viralitas (Experimental)
+            </li>
+            <li style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                Ekspor Data & Laporan
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detail Video</title>
+    <style>
+        body { font-family: Arial; background: #f5f5f5; }
+        .card { background: white; padding: 20px; margin: 20px; border-radius: 10px; }
+        .positive { color: green; }
+        .negative { color: red; }
+        .neutral { color: gray; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📹 Video ID: {{ video_id }}</h2>
+    <p>Total Komentar: {{ total_comments }}</p>
+</div>
+
+<div class="card">
+    <h3>📊 Distribusi Sentimen</h3>
+    <p class="positive">Positif: {{ sentiment_dist['Positif'] }}</p>
+    <p class="negative">Negatif: {{ sentiment_dist['Negatif'] }}</p>
+    <p class="neutral">Netral: {{ sentiment_dist['Netral'] }}</p>
+</div>
+
+<div class="card">
+    <h3>💬 Komentar</h3>
+
+    {% for c in comments %}
+        <div style="margin-bottom:10px;">
+            <b>{{ c.username }}</b> (❤️ {{ c.likes }})<br>
+            {{ c.comment }}<br>
+
+            <small>
+                Sentimen:
+                <span class="
+                    {% if c.sentiment == 'Positif' %}positive
+                    {% elif c.sentiment == 'Negatif' %}negative
+                    {% else %}neutral{% endif %}
+                ">
+                    {{ c.sentiment }}
+                </span>
+            </small>
+        </div>
+        <hr>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>
